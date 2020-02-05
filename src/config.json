@@ -1,0 +1,14 @@
+{
+  "local": {
+    "api": "https://localhost:44369",
+    "dashboard": "http://localhost:3000",
+    "landing": "http://localhost:8000",
+    "embed": "http://localhost:3000"
+  },
+  "production": {
+    "api": "https://jthreadsapi.jrdn.tech",
+    "dashboard": "https://app.jrdn.tech",
+    "landing": "https://jthreads.jrdn.tech",
+    "embed": "https://embed.jrdn.tech"
+  }
+}
