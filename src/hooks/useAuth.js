@@ -13,7 +13,11 @@ const useAuth = () => {
   };
 
   const logout = async () => {
-    removeCookie("token", { path: "/", domain: ".jrdn.tech" });
+    let options = {};
+    if (process.env.NODE_ENV === "production")
+      options = { path: "/", domain: ".jrdn.tech" };
+
+    removeCookie("token", options);
     dispatch({ type: "LOGOUT" });
   };
 
