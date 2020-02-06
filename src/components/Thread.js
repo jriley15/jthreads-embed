@@ -79,11 +79,14 @@ export default function Thread() {
 
   useEffect(() => {
     setComments(pages[page]);
+  }, [pages, page]);
+
+  useEffect(() => {
     window.parent.postMessage(
       { height: containerRef.current.clientHeight },
       "*"
     );
-  }, [pages, page]);
+  }, [comments]);
 
   const handleCommentChange = e => {
     setComment(e.target.value);
