@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import queryString from "query-string";
 import {
@@ -94,7 +94,7 @@ export default function Thread() {
     setComments(pages[page]);
   }, [pages, page]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     updateHeight();
   }, [comments]);
 
