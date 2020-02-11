@@ -316,10 +316,13 @@ export default function Thread() {
     setPage(activePage - 1);
 
     if (!pagesLoaded.includes(activePage - 1)) {
+      setLoading(true);
       let response = await get("/Comment/Search", {
         threadId: threadId,
         index: activePage - 1
       });
+      setLoading(false);
+
       if (response.success) {
         setComments([...comments, ...response.data]);
         setPagesLoaded([...pagesLoaded, activePage - 1]);
