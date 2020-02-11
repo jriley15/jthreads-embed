@@ -73,10 +73,12 @@ export default function Thread() {
       if (origin === config.landing) {
         if (data.token) login(data.token);
       }
-      if (data.outerHeight) setOuterHeight(data.outerHeight);
-      if (data.outerWidth) setOuterWidth(data.outerWidth);
-      if (data.screenY) setScreenY(data.screenY);
-      if (data.screenX) setScreenX(data.screenX);
+      if (typeof data.outerHeight !== "undefined")
+        setOuterHeight(data.outerHeight);
+      if (typeof data.outerWidth !== "undefined")
+        setOuterWidth(data.outerWidth);
+      if (typeof data.screenY !== "undefined") setScreenY(data.screenY);
+      if (typeof data.screenX !== "undefined") setScreenX(data.screenX);
 
       console.log(data);
     });
