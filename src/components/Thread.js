@@ -42,10 +42,10 @@ export default function Thread() {
   const [newComment, setNewComment] = useState(0);
   const containerRef = useRef();
   const [loading, setLoading] = useState(true);
-  const [outerHeight, setOuterHeight] = useState(0);
-  const [outerWidth, setOuterWidth] = useState(0);
-  const [screenY, setScreenY] = useState(0);
-  const [screenX, setScreenX] = useState(0);
+  const [outerHeight, setOuterHeight] = useState(-1);
+  const [outerWidth, setOuterWidth] = useState(-1);
+  const [screenY, setScreenY] = useState(-1);
+  const [screenX, setScreenX] = useState(-1);
 
   const init = async () => {
     let response = await post("/Thread/Init", {
@@ -336,12 +336,12 @@ export default function Thread() {
     let w = 400;
     let h = 500;
     const y =
-      (outerHeight || window.top.outerHeight) / 2 +
-      (screenY || window.top.screenY) -
+      (outerHeight === -1 ? window.top.outerHeight : outerHeight) / 2 +
+      (screenY === -1 ? window.top.screenY : screenY) -
       h / 2;
     const x =
-      (outerWidth || window.top.outerWidth) / 2 +
-      (screenX || window.top.screenX) -
+      (outerWidth === -1 ? window.top.outerWidth : outerWidth) / 2 +
+      (screenX === -1 ? window.top.screenX : screenX) -
       w / 2;
     window.open(
       config.landing + "/login",
