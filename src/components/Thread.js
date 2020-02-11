@@ -74,7 +74,7 @@ export default function Thread() {
         if (data.token) login(data.token);
       }
       if (data.outerHeight) setOuterHeight(data.outerHeight);
-      if (data.outerWidth) setOuterWidth(data.outerHeight);
+      if (data.outerWidth) setOuterWidth(data.outerWidth);
       if (data.screenY) setScreenY(data.screenY);
       if (data.screenX) setScreenX(data.screenX);
 
