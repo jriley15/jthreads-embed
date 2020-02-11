@@ -47,6 +47,14 @@ export default function Thread() {
   const [screenY, setScreenY] = useState(-1);
   const [screenX, setScreenX] = useState(-1);
 
+  const observer = React.useRef(
+    new ResizeObserver(entries => {
+      // Only care about the first element, we expect one element ot be watched
+      const { height } = entries[0].contentRect;
+      window.parent.postMessage({ height: height }, "*");
+    })
+  );
+
   const init = async () => {
     let response = await post("/Thread/Init", {
       namespaceId: namespaceId,
@@ -80,9 +88,11 @@ export default function Thread() {
       if (typeof data.screenY !== "undefined") setScreenY(data.screenY);
       if (typeof data.screenX !== "undefined") setScreenX(data.screenX);
     });
+    observer.current.observe(containerRef.current);
 
     return () => {
       window.removeEventListener("message");
+      observer.current.unobserve();
     };
   }, []);
 
@@ -93,17 +103,6 @@ export default function Thread() {
   useEffect(() => {
     setComments(pages[page]);
   }, [pages, page]);
-
-  useLayoutEffect(() => {
-    updateHeight();
-  }, [comments]);
-
-  const updateHeight = () => {
-    window.parent.postMessage(
-      { height: containerRef.current.clientHeight },
-      "*"
-    );
-  };
 
   const handleCommentChange = e => {
     setComment(e.target.value);
