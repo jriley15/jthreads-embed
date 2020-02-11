@@ -22,6 +22,7 @@ import {
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
 import config from "../util/config";
+import CommentBody from "./CommentBody";
 
 const commentsPerPage = 10;
 
@@ -551,7 +552,9 @@ export default function Thread() {
                   <Comment.Metadata>
                     {getDateString(comment.createdOn)}
                   </Comment.Metadata>
-                  <Comment.Text>{comment.body}</Comment.Text>
+                  <Comment.Text>
+                    <CommentBody body={comment.body} />
+                  </Comment.Text>
                   <Comment.Actions onClick={handleActionsClicked}>
                     <Comment.Action
                       onClick={handleShowCommentReply(commentIndex)}
