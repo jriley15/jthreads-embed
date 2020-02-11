@@ -79,8 +79,6 @@ export default function Thread() {
         setOuterWidth(data.outerWidth);
       if (typeof data.screenY !== "undefined") setScreenY(data.screenY);
       if (typeof data.screenX !== "undefined") setScreenX(data.screenX);
-
-      console.log(data);
     });
 
     return () => {
@@ -263,7 +261,6 @@ export default function Thread() {
 
   const handleSendReplyResponse = (commentIndex, replyIndex) => async e => {
     if (!comments[commentIndex].replies[replyIndex].reply) return;
-    console.log(commentIndex, replyIndex);
     let tempComments = [...comments];
     let response = await post("/Comment/Create", {
       threadId: threadId,
@@ -335,10 +332,6 @@ export default function Thread() {
   };
 
   const handleOpenNormalSignIn = () => {
-    console.log(outerHeight);
-    console.log(screenY);
-    console.log(outerWidth);
-    console.log(screenX);
     let w = 400;
     let h = 500;
     const y =
