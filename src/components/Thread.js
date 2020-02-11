@@ -92,7 +92,6 @@ export default function Thread() {
 
   useEffect(() => {
     setComments(pages[page]);
-    updateHeight();
   }, [pages, page]);
 
   useEffect(() => {
