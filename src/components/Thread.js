@@ -355,6 +355,11 @@ export default function Thread() {
         ", left=" +
         x
     );
+
+    console.log(outerHeight);
+    console.log(screenY);
+    console.log(outerWidth);
+    console.log(screenX);
   };
 
   return (
