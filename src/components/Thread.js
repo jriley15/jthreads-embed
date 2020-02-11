@@ -16,7 +16,8 @@ import {
   Container,
   Dimmer,
   Segment,
-  Dropdown
+  Dropdown,
+  Label
 } from "semantic-ui-react";
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
@@ -40,6 +41,7 @@ export default function Thread() {
   const [pages, setPages] = useState([]);
   const [newComment, setNewComment] = useState(0);
   const containerRef = useRef();
+  const [loading, setLoading] = useState(true);
 
   const init = async () => {
     let response = await post("/Thread/Init", {
@@ -59,6 +61,7 @@ export default function Thread() {
 
       setPages([response.data]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -344,8 +347,7 @@ export default function Thread() {
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
             <Header as="h3" color="grey">
-              {" "}
-              <Icon name="comments" size="large" color="black" />{" "}
+              <Icon name="comments" />
               {thread?.totalComments || 0} comments
             </Header>
           </div>
@@ -406,7 +408,7 @@ export default function Thread() {
         </div>
         <div style={{ display: "flex", marginTop: 16 }}>
           <Comment>
-            <Comment.Avatar src="https://react.semantic-ui.com/images/avatar/small/matt.jpg" />
+            <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
           </Comment>
           <Form reply style={{ marginLeft: 16, width: "100%" }}>
             <Form.TextArea
@@ -417,59 +419,104 @@ export default function Thread() {
               rows={2}
               style={{ height: 70, width: "100%" }}
             />
-
-            {isAuthenticated ? (
-              <Button
-                content="Add Comment"
-                labelPosition="left"
-                icon="edit"
-                primary
-                onClick={handleSendComment}
-              />
-            ) : (
-              <Container textAlign="center">
-                <Header as="h4">
-                  Sign up{" "}
-                  <a href={config.landing + "?register=true"} target="_blank">
-                    here
-                  </a>{" "}
-                  to comment
-                </Header>
-                <Header as="h5" color="grey" style={{ marginTop: 0 }}>
-                  Or sign in with
-                </Header>
-                <div>
-                  <Button
-                    circular
-                    color="facebook"
-                    icon="facebook"
-                    size="large"
-                  />
-                  <Button
-                    circular
-                    color="twitter"
-                    icon="twitter"
-                    size="large"
-                  />
-                  <Button circular icon size="large">
-                    <img
-                      style={{ width: "1.1em" }}
-                      src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                flexDirection: isAuthenticated ? "row" : "column-reverse"
+              }}
+            >
+              {isAuthenticated ? (
+                <Button
+                  content="Add Comment"
+                  labelPosition="left"
+                  icon="edit"
+                  primary
+                  onClick={handleSendComment}
+                />
+              ) : (
+                <Container textAlign="center" style={{ paddingTop: 16 }}>
+                  <Header as="h4">
+                    Sign up{" "}
+                    <a href={config.landing + "?register=true"} target="_blank">
+                      here
+                    </a>{" "}
+                    to comment
+                  </Header>
+                  <Header as="h5" color="grey" style={{ marginTop: 0 }}>
+                    Or sign in with
+                  </Header>
+                  <div>
+                    <Button
+                      circular
+                      color="facebook"
+                      icon="facebook"
+                      size="large"
                     />
+                    <Button
+                      circular
+                      color="twitter"
+                      icon="twitter"
+                      size="large"
+                    />
+                    <Button circular icon size="large">
+                      <img
+                        style={{ width: "1.1em" }}
+                        src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
+                      />
+                    </Button>
+                  </div>
+                </Container>
+              )}
+              <div>
+                <Button as="div" labelPosition="right">
+                  <Button color="red" disabled={!isAuthenticated}>
+                    <Icon name="heart" />
+                    Like
                   </Button>
-                </div>
-              </Container>
-            )}
+                  <Label as="a" basic color="red" pointing="left">
+                    2,048
+                  </Label>
+                </Button>
+
+                <Button labelPosition="left" content="Share" icon="share" />
+              </div>
+            </div>
           </Form>
         </div>
 
-        {pages[page]?.length > 0 ? (
+        {loading ? (
+          <Placeholder style={{ marginTop: 16 }}>
+            <Placeholder.Header image>
+              <Placeholder.Line />
+              <Placeholder.Line />
+            </Placeholder.Header>
+            <Placeholder.Paragraph>
+              <Placeholder.Line />
+              <Placeholder.Line />
+              <Placeholder.Line />
+              <Placeholder.Line />
+            </Placeholder.Paragraph>
+            <Placeholder.Header image>
+              <Placeholder.Line />
+              <Placeholder.Line />
+            </Placeholder.Header>
+            <Placeholder.Paragraph>
+              <Placeholder.Line />
+              <Placeholder.Line />
+              <Placeholder.Line />
+              <Placeholder.Line />
+            </Placeholder.Paragraph>
+          </Placeholder>
+        ) : pages[page]?.length > 0 ? (
           <>
             {comments.map((comment, commentIndex) => (
               <Comment
                 key={comment.commentId}
                 style={{
-                  marginBottom: 16,
+                  marginBottom: "1rem",
+                  marginTop: "1rem",
                   backgroundColor:
                     comment.commentId === newComment
                       ? "rgba( 250, 223, 173, 0.2)"
@@ -477,13 +524,16 @@ export default function Thread() {
                   borderRadius: 10
                 }}
               >
-                <Comment.Avatar src="https://react.semantic-ui.com/images/avatar/small/matt.jpg" />
+                <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
                 <Comment.Content>
                   <Comment.Author as="a">
                     {comment.user?.displayName}
                   </Comment.Author>
+                  <span style={{ paddingLeft: 8, color: "rgba(0,0,0,.4)" }}>
+                    ·
+                  </span>
                   <Comment.Metadata>
-                    <div>{getDateString(comment.createdOn)}</div>
+                    {getDateString(comment.createdOn)}
                   </Comment.Metadata>
                   <Comment.Text>{comment.body}</Comment.Text>
                   <Comment.Actions onClick={handleActionsClicked}>
@@ -492,8 +542,9 @@ export default function Thread() {
                     >
                       Reply
                     </Comment.Action>
+                    <Comment.Action>|</Comment.Action>
                     <Comment.Action>
-                      <span style={{ color: "green", paddingRight: 4 }}>
+                      <span style={{ color: "#2185d0", paddingRight: 4 }}>
                         {comment.likes}
                       </span>
                       <Icon
@@ -511,10 +562,10 @@ export default function Thread() {
                         onClick={handleDislikeComment(comment.commentId)}
                       />
                     </Comment.Action>
+                    <Comment.Action>|</Comment.Action>
                     {comment.replies.length > 0 && (
                       <Comment.Action
                         onClick={handleCollapseReplies(commentIndex)}
-                        style={{ color: "#4183c4" }}
                       >
                         <Icon
                           name={comment.showReplies ? "caret up" : "caret down"}
@@ -523,7 +574,6 @@ export default function Thread() {
                           (comment.replies.length > 1 ? " replies" : " reply")}
                       </Comment.Action>
                     )}
-
                     {comment.replying && (
                       <Form style={{ paddingTop: 8 }}>
                         <Form.Field width={12}>
@@ -551,6 +601,8 @@ export default function Thread() {
                       <Comment
                         key={reply.commentId}
                         style={{
+                          marginTop: "1rem",
+                          marginBottom: "1rem",
                           backgroundColor:
                             reply.commentId === newComment
                               ? "rgba( 250, 223, 173, 0.2)"
@@ -562,6 +614,7 @@ export default function Thread() {
                           <Comment.Author as="a">
                             {reply.user?.displayName}
                           </Comment.Author>
+                          <span style={{ paddingLeft: 8 }}>·</span>
                           <Comment.Metadata>
                             <div>Just now</div>
                           </Comment.Metadata>
@@ -626,28 +679,12 @@ export default function Thread() {
             </div>
           </>
         ) : (
-          <Placeholder style={{ marginTop: 16 }}>
-            <Placeholder.Header image>
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Header>
-            <Placeholder.Paragraph>
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Paragraph>
-            <Placeholder.Header image>
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Header>
-            <Placeholder.Paragraph>
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Paragraph>
-          </Placeholder>
+          <div>
+            <Divider hidden />
+            <Header size="small" style={{ textAlign: "center" }}>
+              No comments yet
+            </Header>
+          </div>
         )}
       </Comment.Group>
     </div>
