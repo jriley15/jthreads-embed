@@ -333,6 +333,10 @@ export default function Thread() {
   };
 
   const handleOpenNormalSignIn = () => {
+    console.log(outerHeight);
+    console.log(screenY);
+    console.log(outerWidth);
+    console.log(screenX);
     let w = 400;
     let h = 500;
     const y =
@@ -355,11 +359,6 @@ export default function Thread() {
         ", left=" +
         x
     );
-
-    console.log(outerHeight);
-    console.log(screenY);
-    console.log(outerWidth);
-    console.log(screenX);
   };
 
   return (
