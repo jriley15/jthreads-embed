@@ -42,6 +42,10 @@ export default function Thread() {
   const [newComment, setNewComment] = useState(0);
   const containerRef = useRef();
   const [loading, setLoading] = useState(true);
+  const [outerHeight, setOuterHeight] = useState(0);
+  const [outerWidth, setOuterWidth] = useState(0);
+  const [screenY, setScreenY] = useState(0);
+  const [screenX, setScreenX] = useState(0);
 
   const init = async () => {
     let response = await post("/Thread/Init", {
@@ -67,8 +71,12 @@ export default function Thread() {
   useEffect(() => {
     window.addEventListener("message", ({ data, origin }) => {
       if (origin === config.landing) {
-        login(data.token);
+        if (data.token) login(data.token);
       }
+      if (data.outerHeight) setOuterHeight(outerHeight);
+      if (data.outerWidth) setOuterWidth(outerHeight);
+      if (data.screenY) setOuterHeight(screenY);
+      if (data.screenX) setOuterHeight(screenX);
     });
 
     return () => {
@@ -325,8 +333,8 @@ export default function Thread() {
   const handleOpenNormalSignIn = () => {
     let w = 400;
     let h = 500;
-    const y = window.top.outerHeight / 2 + window.top.screenY - h / 2;
-    const x = window.top.outerWidth / 2 + window.top.screenX - w / 2;
+    const y = outerHeight / 2 + screenY - h / 2;
+    const x = outerWidth / 2 + screenX - w / 2;
     window.open(
       config.landing + "/login",
       "Login",
