@@ -75,8 +75,8 @@ export default function Thread() {
       }
       if (data.outerHeight) setOuterHeight(outerHeight);
       if (data.outerWidth) setOuterWidth(outerHeight);
-      if (data.screenY) setOuterHeight(screenY);
-      if (data.screenX) setOuterHeight(screenX);
+      if (data.screenY) setScreenY(screenY);
+      if (data.screenX) setScreenX(screenX);
 
       console.log(data);
     });
