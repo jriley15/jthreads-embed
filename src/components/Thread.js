@@ -77,6 +77,8 @@ export default function Thread() {
       if (data.outerWidth) setOuterWidth(outerHeight);
       if (data.screenY) setOuterHeight(screenY);
       if (data.screenX) setOuterHeight(screenX);
+
+      console.log(data);
     });
 
     return () => {
@@ -333,8 +335,14 @@ export default function Thread() {
   const handleOpenNormalSignIn = () => {
     let w = 400;
     let h = 500;
-    const y = outerHeight / 2 + screenY - h / 2;
-    const x = outerWidth / 2 + screenX - w / 2;
+    const y =
+      (outerHeight || window.top.outerHeight) / 2 +
+      (screenY || window.top.screenY) -
+      h / 2;
+    const x =
+      (outerWidth || window.top.outerWidth) / 2 +
+      (screenX || window.top.screenX) -
+      w / 2;
     window.open(
       config.landing + "/login",
       "Login",
