@@ -389,7 +389,12 @@ export default function Thread() {
               icon={
                 <Icon
                   name="ellipsis vertical"
-                  style={{ margin: 0, marginLeft: 4, marginTop: 2 }}
+                  style={{
+                    margin: 0,
+                    marginLeft: 6,
+                    marginTop: 2,
+                    fontSize: "1.25rem"
+                  }}
                 />
               }
               simple
@@ -484,9 +489,15 @@ export default function Thread() {
               <Dropdown
                 direction="left"
                 button
-                text={"Share"}
+                text={
+                  <Header as="h4" color="grey">
+                    Share
+                  </Header>
+                }
                 labeled
-                icon={<Icon name="share" style={{ marginLeft: 6 }} />}
+                icon={
+                  <Icon name="share" style={{ marginLeft: 6, marginTop: 2 }} />
+                }
                 simple
               >
                 <Dropdown.Menu>
@@ -496,11 +507,39 @@ export default function Thread() {
               </Dropdown>
             </List.Item>
             <List.Item>
-              <Dropdown direction="left" labeled button text="Sort by">
+              <Dropdown
+                direction="left"
+                labeled
+                button
+                header
+                text={
+                  <Header as="h4" color="grey">
+                    Sort by
+                  </Header>
+                }
+              >
                 <Dropdown.Menu>
                   <Dropdown.Item text="Newest" />
                   <Dropdown.Item text="Highest rating" />
                   <Dropdown.Item text="Replies" />
+                </Dropdown.Menu>
+              </Dropdown>
+            </List.Item>
+            <List.Item style={{ height: 24.67 }}>
+              <Dropdown
+                direction="left"
+                labeled
+                button
+                text={
+                  <Header as="h4" color="grey">
+                    <Icon name="setting" style={{ marginRight: 0 }} />
+                  </Header>
+                }
+              >
+                <Dropdown.Menu>
+                  <Dropdown.Item text="Setting 1" />
+                  <Dropdown.Item text="Setting 2" />
+                  <Dropdown.Item text="Setting 3" />
                 </Dropdown.Menu>
               </Dropdown>
             </List.Item>
