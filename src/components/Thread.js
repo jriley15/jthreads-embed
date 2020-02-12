@@ -361,67 +361,150 @@ export default function Thread() {
   return (
     <div id="jthread-container" onClick={handleClickAway} ref={containerRef}>
       <Comment.Group style={{ maxWidth: "100%" }} size="large">
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div>
-            <Header as="h3" color="grey">
-              <Icon name="comments" />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}
+        >
+          <div style={{ display: "flex" }}>
+            <Icon name="comments" size="large" color="grey" />
+            <Header as="h3" color="grey" style={{ margin: 0 }}>
               {thread?.totalComments || 0} comments
             </Header>
           </div>
-          <div>
-            {isAuthenticated ? (
+
+          {isAuthenticated ? (
+            <Dropdown
+              direction="right"
+              button
+              labeled
+              style={{ margin: 0 }}
+              text={
+                <Header as="h3" color="grey">
+                  Logged in as {claims.name}
+                </Header>
+              }
+              icon={
+                <Icon
+                  name="ellipsis vertical"
+                  style={{ margin: 0, marginLeft: 4, marginTop: 2 }}
+                />
+              }
+              simple
+            >
+              <Dropdown.Menu>
+                <Dropdown.Item text="Profile" icon="user" />
+                <Dropdown.Item
+                  onClick={() => {
+                    logout();
+                  }}
+                  text="Logout"
+                  icon="close"
+                />
+              </Dropdown.Menu>
+            </Dropdown>
+          ) : (
+            <Dropdown
+              direction="left"
+              style={{ margin: 0 }}
+              text={
+                <Header as="h3" color="grey">
+                  Sign in
+                </Header>
+              }
+              icon={
+                <Icon
+                  name="lock"
+                  style={{ margin: 0, marginLeft: 6, marginTop: 2 }}
+                />
+              }
+              button
+              labeled
+              simple
+            >
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  text={
+                    <>
+                      <Icon name="comments" />
+                      JThreads
+                    </>
+                  }
+                  onClick={handleOpenNormalSignIn}
+                />
+                <Dropdown.Item
+                  text={
+                    <span style={{ display: "flex", alignItems: "center" }}>
+                      <img
+                        style={{
+                          width: "1em",
+                          marginRight: 11,
+                          marginLeft: 2
+                        }}
+                        src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
+                      />{" "}
+                      Google
+                    </span>
+                  }
+                />
+                <Dropdown.Item text="Facebook" icon="facebook blue" />
+                <Dropdown.Item text="Twitter" icon="twitter blue" />
+              </Dropdown.Menu>
+            </Dropdown>
+          )}
+        </div>
+        <Divider />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start"
+          }}
+        >
+          <List divided horizontal>
+            <List.Item>
+              <Button as="div" labelPosition="right" size="tiny">
+                <Button color="red" size="tiny">
+                  <Icon name="heart" />
+                  Like
+                </Button>
+                <Label as="a" basic color="red" pointing="left" size="tiny">
+                  2,048
+                </Label>
+              </Button>
+            </List.Item>
+            <List.Item>
+              <Header as="h4">Views: 10,322</Header>
+            </List.Item>
+          </List>
+          <List divided horizontal>
+            <List.Item>
               <Dropdown
                 direction="left"
-                text={<List.Header as="h3">{claims.name}</List.Header>}
+                button
+                text={"Share"}
+                labeled
+                icon={<Icon name="share" style={{ marginLeft: 6 }} />}
+                simple
               >
                 <Dropdown.Menu>
-                  <Dropdown.Item text="Profile" icon="user" />
-                  <Dropdown.Item
-                    onClick={() => {
-                      logout();
-                    }}
-                    text="Logout"
-                    icon="close"
-                  />
+                  <Dropdown.Item text="Facebook" icon="facebook blue" />
+                  <Dropdown.Item text="Twitter" icon="twitter blue" />
                 </Dropdown.Menu>
               </Dropdown>
-            ) : (
-              <List horizontal>
-                <List.Item>
-                  <Dropdown
-                    direction="left"
-                    text={<List.Header as="h3">Login</List.Header>}
-                  >
-                    <Dropdown.Menu>
-                      <Dropdown.Item
-                        text="With JThreads"
-                        onClick={handleOpenNormalSignIn}
-                      />
-                      <Dropdown.Item
-                        text={
-                          <span
-                            style={{ display: "flex", alignItems: "center" }}
-                          >
-                            <img
-                              style={{
-                                width: "1em",
-                                marginRight: 11,
-                                marginLeft: 2
-                              }}
-                              src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
-                            />{" "}
-                            Google
-                          </span>
-                        }
-                      />
-                      <Dropdown.Item text="Facebook" icon="facebook blue" />
-                      <Dropdown.Item text="Twitter" icon="twitter blue" />
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </List.Item>
-              </List>
-            )}
-          </div>
+            </List.Item>
+            <List.Item>
+              <Dropdown direction="left" labeled button text="Sort by">
+                <Dropdown.Menu>
+                  <Dropdown.Item text="Newest" />
+                  <Dropdown.Item text="Highest rating" />
+                  <Dropdown.Item text="Replies" />
+                </Dropdown.Menu>
+              </Dropdown>
+            </List.Item>
+          </List>
         </div>
         <div style={{ display: "flex", marginTop: 16 }}>
           <Comment>
@@ -436,275 +519,270 @@ export default function Thread() {
               rows={2}
               style={{ height: 70, width: "100%" }}
             />
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-                flexDirection: isAuthenticated ? "row" : "column-reverse"
-              }}
-            >
-              {isAuthenticated ? (
-                <Button
-                  content="Add Comment"
-                  labelPosition="left"
-                  icon="edit"
-                  primary
-                  onClick={handleSendComment}
-                />
-              ) : (
-                <Container textAlign="center" style={{ paddingTop: 16 }}>
-                  <Header as="h4">
-                    Sign up{" "}
-                    <a href={config.landing + "?register=true"} target="_blank">
-                      here
-                    </a>{" "}
-                    to comment
-                  </Header>
-                  <Header as="h5" color="grey" style={{ marginTop: 0 }}>
-                    Or sign in with
-                  </Header>
-                  <div>
-                    <Button
-                      circular
-                      color="facebook"
-                      icon="facebook"
-                      size="large"
-                    />
-                    <Button
-                      circular
-                      color="twitter"
-                      icon="twitter"
-                      size="large"
-                    />
-                    <Button circular icon size="large">
-                      <img
-                        style={{ width: "1.1em" }}
-                        src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
-                      />
-                    </Button>
-                  </div>
-                </Container>
-              )}
-              <div>
-                <Button as="div" labelPosition="right">
-                  <Button color="red" disabled={!isAuthenticated}>
-                    <Icon name="heart" />
-                    Like
-                  </Button>
-                  <Label as="a" basic color="red" pointing="left">
-                    2,048
-                  </Label>
-                </Button>
 
-                <Button labelPosition="left" content="Share" icon="share" />
-              </div>
-            </div>
+            {isAuthenticated ? (
+              <Button
+                content="Add Comment"
+                labelPosition="left"
+                icon="edit"
+                primary
+                onClick={handleSendComment}
+              />
+            ) : (
+              <Container textAlign="center" style={{ paddingTop: 16 }}>
+                <Header as="h4">
+                  Sign up{" "}
+                  <a href={config.landing + "?register=true"} target="_blank">
+                    here
+                  </a>{" "}
+                  to comment
+                </Header>
+                <Header as="h5" color="grey" style={{ marginTop: 0 }}>
+                  Or sign in with
+                </Header>
+                <div>
+                  <Button
+                    circular
+                    color="facebook"
+                    icon="facebook"
+                    size="large"
+                  />
+                  <Button
+                    circular
+                    color="twitter"
+                    icon="twitter"
+                    size="large"
+                  />
+                  <Button circular icon size="large">
+                    <img
+                      style={{ width: "1.1em" }}
+                      src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
+                    />
+                  </Button>
+                  <Button
+                    circular
+                    icon="comments"
+                    size="large"
+                    color="black"
+                    onClick={handleOpenNormalSignIn}
+                  />
+                </div>
+              </Container>
+            )}
           </Form>
         </div>
 
-        {loading ? (
-          <Placeholder style={{ marginTop: 16 }}>
-            <Placeholder.Header image>
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Header>
-            <Placeholder.Paragraph>
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Paragraph>
-            <Placeholder.Header image>
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Header>
-            <Placeholder.Paragraph>
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-              <Placeholder.Line />
-            </Placeholder.Paragraph>
-          </Placeholder>
-        ) : pages[page]?.length > 0 ? (
-          <>
-            {comments.map((comment, commentIndex) => (
-              <Comment
-                key={comment.commentId}
-                style={{
-                  marginBottom: "1rem",
-                  marginTop: "1rem",
-                  backgroundColor:
-                    comment.commentId === newComment
-                      ? "rgba( 250, 223, 173, 0.2)"
-                      : "inherit",
-                  borderRadius: 10
-                }}
-              >
-                <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
-                <Comment.Content>
-                  <Comment.Author as="a">
-                    {comment.user?.displayName}
-                  </Comment.Author>
-                  <span style={{ paddingLeft: 8, color: "rgba(0,0,0,.4)" }}>
-                    ·
-                  </span>
-                  <Comment.Metadata>
-                    {getDateString(comment.createdOn)}
-                  </Comment.Metadata>
-                  <Comment.Text>
-                    <CommentBody body={comment.body} />
-                  </Comment.Text>
-                  <Comment.Actions onClick={handleActionsClicked}>
-                    <Comment.Action
-                      onClick={handleShowCommentReply(commentIndex)}
-                    >
-                      Reply
-                    </Comment.Action>
-                    <Comment.Action>|</Comment.Action>
-                    <Comment.Action>
-                      <span style={{ color: "#2185d0", paddingRight: 4 }}>
-                        {comment.likes}
-                      </span>
-                      <Icon
-                        name="thumbs up"
-                        onClick={handleLikeComment(comment.commentId)}
-                      />
-                    </Comment.Action>
-                    <Comment.Action>
-                      <span style={{ color: "red", paddingRight: 4 }}>
-                        {comment.dislikes}
-                      </span>
-
-                      <Icon
-                        name="thumbs down"
-                        onClick={handleDislikeComment(comment.commentId)}
-                      />
-                    </Comment.Action>
-                    <Comment.Action>|</Comment.Action>
-                    {comment.replies.length > 0 && (
+        <div style={{ paddingTop: 16 }}>
+          {loading ? (
+            <Placeholder style={{ marginTop: 16 }}>
+              <Placeholder.Header image>
+                <Placeholder.Line />
+                <Placeholder.Line />
+              </Placeholder.Header>
+              <Placeholder.Paragraph>
+                <Placeholder.Line />
+                <Placeholder.Line />
+                <Placeholder.Line />
+                <Placeholder.Line />
+              </Placeholder.Paragraph>
+              <Placeholder.Header image>
+                <Placeholder.Line />
+                <Placeholder.Line />
+              </Placeholder.Header>
+              <Placeholder.Paragraph>
+                <Placeholder.Line />
+                <Placeholder.Line />
+                <Placeholder.Line />
+                <Placeholder.Line />
+              </Placeholder.Paragraph>
+            </Placeholder>
+          ) : pages[page]?.length > 0 ? (
+            <>
+              {comments.map((comment, commentIndex) => (
+                <Comment
+                  key={comment.commentId}
+                  style={{
+                    paddingBottom: "1rem",
+                    paddingTop: "1rem",
+                    margin: 0,
+                    backgroundColor:
+                      comment.commentId === newComment
+                        ? "rgba( 250, 223, 173, 0.2)"
+                        : "inherit",
+                    borderRadius: 10
+                  }}
+                >
+                  <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
+                  <Comment.Content>
+                    <Comment.Author as="a">
+                      {comment.user?.displayName}
+                    </Comment.Author>
+                    <span style={{ paddingLeft: 8, color: "rgba(0,0,0,.4)" }}>
+                      ·
+                    </span>
+                    <Comment.Metadata>
+                      {getDateString(comment.createdOn)}
+                    </Comment.Metadata>
+                    <Comment.Text>
+                      <CommentBody body={comment.body} />
+                    </Comment.Text>
+                    <Comment.Actions onClick={handleActionsClicked}>
                       <Comment.Action
-                        onClick={handleCollapseReplies(commentIndex)}
+                        onClick={handleShowCommentReply(commentIndex)}
                       >
-                        <Icon
-                          name={comment.showReplies ? "caret up" : "caret down"}
-                        />
-                        {comment.replies.length +
-                          (comment.replies.length > 1 ? " replies" : " reply")}
+                        Reply
                       </Comment.Action>
-                    )}
-                    {comment.replying && (
-                      <Form style={{ paddingTop: 8 }}>
-                        <Form.Field width={12}>
-                          <input
-                            placeholder="Reply"
-                            autoFocus
-                            value={comment.reply || ""}
-                            onChange={handleCommentReplyChange(commentIndex)}
-                          />
-                        </Form.Field>
-                        <Form.Field
-                          control={Button}
-                          size="small"
-                          onClick={handleSendReply(commentIndex)}
+                      <Comment.Action>|</Comment.Action>
+                      <Comment.Action>
+                        <span style={{ color: "#2185d0", paddingRight: 4 }}>
+                          {comment.likes}
+                        </span>
+                        <Icon
+                          name="thumbs up"
+                          onClick={handleLikeComment(comment.commentId)}
+                        />
+                      </Comment.Action>
+                      <Comment.Action>
+                        <span style={{ color: "red", paddingRight: 4 }}>
+                          {comment.dislikes}
+                        </span>
+
+                        <Icon
+                          name="thumbs down"
+                          onClick={handleDislikeComment(comment.commentId)}
+                        />
+                      </Comment.Action>
+                      <Comment.Action>|</Comment.Action>
+                      {comment.replies.length > 0 && (
+                        <Comment.Action
+                          onClick={handleCollapseReplies(commentIndex)}
                         >
-                          Send
-                        </Form.Field>
-                      </Form>
-                    )}
-                  </Comment.Actions>
-                </Comment.Content>
-                {comment.showReplies && comment.replies?.length > 0 && (
-                  <Comment.Group size="large">
-                    {comment.replies.map((reply, replyIndex) => (
-                      <Comment
-                        key={reply.commentId}
-                        style={{
-                          marginTop: "1rem",
-                          marginBottom: "1rem",
-                          backgroundColor:
-                            reply.commentId === newComment
-                              ? "rgba( 250, 223, 173, 0.2)"
-                              : "inherit"
-                        }}
-                      >
-                        <Comment.Avatar src="https://react.semantic-ui.com/images/avatar/small/jenny.jpg" />
-                        <Comment.Content>
-                          <Comment.Author as="a">
-                            {reply.user?.displayName}
-                          </Comment.Author>
-                          <span style={{ paddingLeft: 8 }}>·</span>
-                          <Comment.Metadata>
-                            <div>Just now</div>
-                          </Comment.Metadata>
-                          <Comment.Text>{reply.body}</Comment.Text>
-                          <Comment.Actions onClick={handleActionsClicked}>
-                            <Comment.Action
-                              onClick={handleShowCommentReplyResponse(
-                                commentIndex,
-                                replyIndex
-                              )}
-                            >
-                              Reply
-                            </Comment.Action>
-                            {reply.replying && (
-                              <Form style={{ paddingTop: 8 }}>
-                                <Form.Field width={12}>
-                                  <input
-                                    placeholder="Reply"
-                                    autoFocus
-                                    value={
-                                      reply.reply ||
-                                      "@" + reply.user.displayName + " "
-                                    }
-                                    onChange={handleCommentReplyResponseChange(
+                          <Icon
+                            name={
+                              comment.showReplies ? "caret up" : "caret down"
+                            }
+                          />
+                          {comment.replies.length +
+                            (comment.replies.length > 1
+                              ? " replies"
+                              : " reply")}
+                        </Comment.Action>
+                      )}
+                      {comment.replying && (
+                        <Form style={{ paddingTop: 8 }}>
+                          <Form.Field width={12}>
+                            <input
+                              placeholder="Reply"
+                              autoFocus
+                              value={comment.reply || ""}
+                              onChange={handleCommentReplyChange(commentIndex)}
+                            />
+                          </Form.Field>
+                          <Form.Field
+                            control={Button}
+                            size="small"
+                            onClick={handleSendReply(commentIndex)}
+                          >
+                            Send
+                          </Form.Field>
+                        </Form>
+                      )}
+                    </Comment.Actions>
+                  </Comment.Content>
+                  {comment.showReplies && comment.replies?.length > 0 && (
+                    <Comment.Group size="large">
+                      {comment.replies.map((reply, replyIndex) => (
+                        <Comment
+                          key={reply.commentId}
+                          style={{
+                            marginTop: "1rem",
+                            marginBottom: "1rem",
+                            backgroundColor:
+                              reply.commentId === newComment
+                                ? "rgba( 250, 223, 173, 0.2)"
+                                : "inherit"
+                          }}
+                        >
+                          <Comment.Avatar src="https://react.semantic-ui.com/images/avatar/small/jenny.jpg" />
+                          <Comment.Content>
+                            <Comment.Author as="a">
+                              {reply.user?.displayName}
+                            </Comment.Author>
+                            <span style={{ paddingLeft: 8 }}>·</span>
+                            <Comment.Metadata>
+                              <div>Just now</div>
+                            </Comment.Metadata>
+                            <Comment.Text>
+                              <CommentBody body={reply.body} />
+                            </Comment.Text>
+                            <Comment.Actions onClick={handleActionsClicked}>
+                              <Comment.Action
+                                onClick={handleShowCommentReplyResponse(
+                                  commentIndex,
+                                  replyIndex
+                                )}
+                              >
+                                Reply
+                              </Comment.Action>
+                              {reply.replying && (
+                                <Form style={{ paddingTop: 8 }}>
+                                  <Form.Field width={12}>
+                                    <input
+                                      placeholder="Reply"
+                                      autoFocus
+                                      value={
+                                        reply.reply ||
+                                        "@" + reply.user.displayName + " "
+                                      }
+                                      onChange={handleCommentReplyResponseChange(
+                                        commentIndex,
+                                        replyIndex
+                                      )}
+                                    />
+                                  </Form.Field>
+                                  <Form.Field
+                                    control={Button}
+                                    size="small"
+                                    onClick={handleSendReplyResponse(
                                       commentIndex,
                                       replyIndex
                                     )}
-                                  />
-                                </Form.Field>
-                                <Form.Field
-                                  control={Button}
-                                  size="small"
-                                  onClick={handleSendReplyResponse(
-                                    commentIndex,
-                                    replyIndex
-                                  )}
-                                >
-                                  Send
-                                </Form.Field>
-                              </Form>
-                            )}
-                          </Comment.Actions>
-                        </Comment.Content>
-                      </Comment>
-                    ))}
-                  </Comment.Group>
-                )}
-              </Comment>
-            ))}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginTop: 32
-              }}
-            >
-              <Pagination
-                totalPages={Math.ceil(thread.comments / commentsPerPage)}
-                activePage={page + 1}
-                onPageChange={handlePageChange}
-              ></Pagination>
+                                  >
+                                    Send
+                                  </Form.Field>
+                                </Form>
+                              )}
+                            </Comment.Actions>
+                          </Comment.Content>
+                        </Comment>
+                      ))}
+                    </Comment.Group>
+                  )}
+                </Comment>
+              ))}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: 32
+                }}
+              >
+                <Pagination
+                  totalPages={Math.ceil(thread.comments / commentsPerPage)}
+                  activePage={page + 1}
+                  onPageChange={handlePageChange}
+                ></Pagination>
+              </div>
+            </>
+          ) : (
+            <div>
+              <Divider hidden />
+              <Header size="small" style={{ textAlign: "center" }}>
+                No comments yet
+              </Header>
             </div>
-          </>
-        ) : (
-          <div>
-            <Divider hidden />
-            <Header size="small" style={{ textAlign: "center" }}>
-              No comments yet
-            </Header>
-          </div>
-        )}
+          )}
+        </div>
       </Comment.Group>
     </div>
   );
