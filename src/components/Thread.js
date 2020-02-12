@@ -383,7 +383,7 @@ export default function Thread() {
               style={{ margin: 0 }}
               text={
                 <Header as="h3" color="grey">
-                  Logged in as {claims.name}
+                  Signed in as {claims.name}
                 </Header>
               }
               icon={
@@ -760,19 +760,22 @@ export default function Thread() {
                   )}
                 </Comment>
               ))}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginTop: 32
-                }}
-              >
-                <Pagination
-                  totalPages={Math.ceil(thread.comments / commentsPerPage)}
-                  activePage={page + 1}
-                  onPageChange={handlePageChange}
-                ></Pagination>
-              </div>
+              {Math.ceil(thread.comments / commentsPerPage) > 1 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: 32,
+                    marginBottom: 32
+                  }}
+                >
+                  <Pagination
+                    totalPages={Math.ceil(thread.comments / commentsPerPage)}
+                    activePage={page + 1}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
             </>
           ) : (
             <div>
@@ -783,6 +786,18 @@ export default function Thread() {
             </div>
           )}
         </div>
+        <Divider />
+
+        <List horizontal divided>
+          <List.Item>
+            <Header as="h4">
+              Powered by{" "}
+              <a href="https://jthreads.jrdn.tech" target="_blank">
+                JThreads
+              </a>
+            </Header>
+          </List.Item>
+        </List>
       </Comment.Group>
     </div>
   );
