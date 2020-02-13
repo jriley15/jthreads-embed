@@ -17,7 +17,8 @@ import {
   Dimmer,
   Segment,
   Dropdown,
-  Label
+  Label,
+  Loader
 } from "semantic-ui-react";
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
@@ -406,7 +407,6 @@ export default function Thread() {
 
           {isAuthenticated ? (
             <Dropdown
-              direction="right"
               button
               labeled
               style={{ margin: 0 }}
@@ -420,7 +420,7 @@ export default function Thread() {
                   name="ellipsis vertical"
                   style={{
                     margin: 0,
-                    marginLeft: 6,
+                    marginLeft: 4,
                     marginTop: 2,
                     fontSize: "1.25rem"
                   }}
@@ -565,7 +565,7 @@ export default function Thread() {
                 labeled
                 button
                 text={
-                  <Header as="h4" color="grey">
+                  <Header as="h5" color="grey">
                     <Icon name="setting" style={{ marginRight: 0 }} />
                   </Header>
                 }
@@ -648,15 +648,12 @@ export default function Thread() {
 
         <div style={{ paddingTop: 16 }}>
           {loading ? (
-            <Placeholder
-              style={{ marginTop: 16, backgroundColor: "transparent" }}
-            >
+            <Placeholder fluid style={{ marginTop: 16, marginBottom: 32 }}>
               <Placeholder.Header image>
                 <Placeholder.Line />
                 <Placeholder.Line />
               </Placeholder.Header>
               <Placeholder.Paragraph>
-                <Placeholder.Line />
                 <Placeholder.Line />
                 <Placeholder.Line />
                 <Placeholder.Line />
@@ -666,7 +663,6 @@ export default function Thread() {
                 <Placeholder.Line />
               </Placeholder.Header>
               <Placeholder.Paragraph>
-                <Placeholder.Line />
                 <Placeholder.Line />
                 <Placeholder.Line />
                 <Placeholder.Line />

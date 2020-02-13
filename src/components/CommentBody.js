@@ -18,14 +18,26 @@ export default function CommentBody({ body }) {
             <>
               {formattedBody}
               ..{" "}
-              <a href="#" onClick={() => setExpanded(true)}>
+              <a
+                href=""
+                onClick={e => {
+                  setExpanded(true);
+                  e.preventDefault();
+                }}
+              >
                 Read more
               </a>
             </>
           ) : (
             <>
               {body}
-              <a href="#" onClick={() => setExpanded(false)}>
+              <a
+                href=""
+                onClick={e => {
+                  setExpanded(false);
+                  e.preventDefault();
+                }}
+              >
                 {" "}
                 Show less
               </a>
