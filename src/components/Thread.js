@@ -35,6 +35,7 @@ export default function Thread() {
   const { claims, isAuthenticated, login, logout } = useAuth();
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
   const [threadId, setThreadId] = useState("");
   const [page, setPage] = useState(0);
   const [thread, setThread] = useState({});
@@ -113,14 +114,16 @@ export default function Thread() {
     if (!comment) {
       return;
     }
+    setCommentLoading(true);
     let tempComment = comment;
-    setComment("");
+
     let response = await post("/Comment/Create", {
       threadId: threadId,
       namespaceId: namespaceId,
       body: tempComment
     });
-
+    setComment("");
+    setCommentLoading(false);
     if (response.success) {
       //init();
       /*handlePageChange(null, {
@@ -203,8 +206,11 @@ export default function Thread() {
   const getDateString = date => {
     let convertedDate = new Date(date + "Z");
     let now = new Date();
-
-    if (convertedDate.getDay() == now.getDay()) {
+    if (
+      convertedDate.getFullYear() === now.getFullYear() &&
+      convertedDate.getMonth() === now.getMonth() &&
+      convertedDate.getDate() === now.getDate()
+    ) {
       let time = convertedDate.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit"
@@ -225,14 +231,19 @@ export default function Thread() {
     if (!comments[index].reply) return;
 
     let tempComments = [...comments];
+    tempComments[index].loading = true;
+    setComments(tempComments);
+
     let response = await post("/Comment/Create", {
       threadId: threadId,
       namespaceId: namespaceId,
       parentCommentId: comments[index].commentId,
       body: comments[index].reply
     });
+    tempComments = [...comments];
     tempComments[index].reply = "";
     tempComments[index].replying = false;
+    tempComments[index].loading = false;
     setComments(tempComments);
     setNewComment(response.data.commentId);
     if (response.success) {
@@ -331,6 +342,24 @@ export default function Thread() {
         setPages(tempPages);
       }
     }
+  };
+
+  const handleThreadLike = async () => {
+    let threadCopy = { ...thread };
+    threadCopy.likeLoading = true;
+    setThread(threadCopy);
+
+    let response = await post("/Thread/Rate", {
+      type: 1,
+      threadId: thread.threadId
+    });
+
+    threadCopy = { ...thread };
+    threadCopy.likeLoading = false;
+    if (response.success) {
+      threadCopy.likes++;
+    }
+    setThread(threadCopy);
   };
 
   const handleOpenNormalSignIn = () => {
@@ -470,18 +499,23 @@ export default function Thread() {
         >
           <List divided horizontal>
             <List.Item>
-              <Button as="div" labelPosition="right" size="tiny">
-                <Button color="red" size="tiny">
+              <Button
+                as="div"
+                labelPosition="right"
+                size="tiny"
+                onClick={handleThreadLike}
+              >
+                <Button color="red" size="tiny" loading={thread.likeLoading}>
                   <Icon name="heart" />
                   Like
                 </Button>
                 <Label as="a" basic color="red" pointing="left" size="tiny">
-                  2,048
+                  {thread.likes || 0}
                 </Label>
               </Button>
             </List.Item>
             <List.Item>
-              <Header as="h4">Views: 10,322</Header>
+              <Header as="h4">Views: {thread.views || 0}</Header>
             </List.Item>
           </List>
           <List divided horizontal>
@@ -554,7 +588,7 @@ export default function Thread() {
               value={comment}
               onChange={handleCommentChange}
               placeholder={"Leave a comment"}
-              disabled={!isAuthenticated}
+              disabled={!isAuthenticated || commentLoading}
               rows={2}
               style={{ height: 70, width: "100%" }}
             />
@@ -562,6 +596,7 @@ export default function Thread() {
             {isAuthenticated ? (
               <Button
                 content="Add Comment"
+                loading={commentLoading}
                 labelPosition="left"
                 icon="edit"
                 primary
@@ -613,7 +648,9 @@ export default function Thread() {
 
         <div style={{ paddingTop: 16 }}>
           {loading ? (
-            <Placeholder style={{ marginTop: 16 }}>
+            <Placeholder
+              style={{ marginTop: 16, backgroundColor: "transparent" }}
+            >
               <Placeholder.Header image>
                 <Placeholder.Line />
                 <Placeholder.Line />
@@ -691,21 +728,24 @@ export default function Thread() {
                           onClick={handleDislikeComment(comment.commentId)}
                         />
                       </Comment.Action>
-                      <Comment.Action>|</Comment.Action>
+
                       {comment.replies.length > 0 && (
-                        <Comment.Action
-                          onClick={handleCollapseReplies(commentIndex)}
-                        >
-                          <Icon
-                            name={
-                              comment.showReplies ? "caret up" : "caret down"
-                            }
-                          />
-                          {comment.replies.length +
-                            (comment.replies.length > 1
-                              ? " replies"
-                              : " reply")}
-                        </Comment.Action>
+                        <>
+                          <Comment.Action>|</Comment.Action>
+                          <Comment.Action
+                            onClick={handleCollapseReplies(commentIndex)}
+                          >
+                            <Icon
+                              name={
+                                comment.showReplies ? "caret up" : "caret down"
+                              }
+                            />
+                            {comment.replies.length +
+                              (comment.replies.length > 1
+                                ? " replies"
+                                : " reply")}
+                          </Comment.Action>
+                        </>
                       )}
                       {comment.replying && (
                         <Form style={{ paddingTop: 8 }}>
@@ -713,16 +753,15 @@ export default function Thread() {
                             <input
                               placeholder="Reply"
                               autoFocus
+                              disabled={comment.loading}
                               value={comment.reply || ""}
                               onChange={handleCommentReplyChange(commentIndex)}
                             />
                           </Form.Field>
-                          <Form.Field
-                            control={Button}
-                            size="small"
-                            onClick={handleSendReply(commentIndex)}
-                          >
-                            Send
+                          <Form.Field onClick={handleSendReply(commentIndex)}>
+                            <Button size="small" loading={comment.loading}>
+                              Send
+                            </Button>
                           </Form.Field>
                         </Form>
                       )}
