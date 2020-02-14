@@ -426,7 +426,6 @@ export default function Thread() {
                   }}
                 />
               }
-              simple
             >
               <Dropdown.Menu>
                 <Dropdown.Item text="Profile" icon="user" />
@@ -456,7 +455,6 @@ export default function Thread() {
               }
               button
               labeled
-              simple
             >
               <Dropdown.Menu>
                 <Dropdown.Item
@@ -532,7 +530,6 @@ export default function Thread() {
                 icon={
                   <Icon name="share" style={{ marginLeft: 6, marginTop: 2 }} />
                 }
-                simple
               >
                 <Dropdown.Menu>
                   <Dropdown.Item text="Facebook" icon="facebook blue" />
