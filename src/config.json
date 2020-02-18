@@ -1,7 +1,7 @@
 {
   "local": {
     "api": "https://localhost:44369",
-    "dashboard": "http://localhost:3000",
+    "dashboard": "http://localhost:3001",
     "landing": "http://localhost:8000",
     "embed": "http://localhost:3000"
   },

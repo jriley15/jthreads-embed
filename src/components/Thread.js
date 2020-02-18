@@ -24,6 +24,8 @@ import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
 import config from "../util/config";
 import CommentBody from "./CommentBody";
+import GoogleLogin from "react-google-login";
+import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
 
 const commentsPerPage = 10;
 
@@ -49,6 +51,7 @@ export default function Thread() {
   const [outerWidth, setOuterWidth] = useState(-1);
   const [screenY, setScreenY] = useState(-1);
   const [screenX, setScreenX] = useState(-1);
+  const [selectedSort, setSelectedSort] = useState(0);
 
   const observer = React.useRef(
     new ResizeObserver(entries => {
@@ -68,13 +71,14 @@ export default function Thread() {
 
     setThreadId(response.data.threadId);
     response = await get("/Comment/Search", {
-      threadId: response.data.threadId
+      threadId: response.data.threadId,
+      sortType: selectedSort
     });
     if (response.success) {
       setComments(response.data);
       setPagesLoaded([0]);
-
       setPages([response.data]);
+      setPage(0);
     }
     setLoading(false);
   };
@@ -131,19 +135,20 @@ export default function Thread() {
         activePage: Math.ceil((thread.comments + 1) / commentsPerPage)
       });*/
       setNewComment(response.data.commentId);
-      let newPage = Math.ceil((thread.comments + 1) / commentsPerPage);
+      let newPage = 1; //Math.ceil((thread.comments + 1) / commentsPerPage);
       setThread({
         ...thread,
         comments: thread.comments + 1,
         totalComments: thread.totalComments + 1
       });
-
+      setSelectedSort(0);
       response = await get("/Comment/Search", {
         threadId: threadId,
-        index: newPage - 1
+        pageIndex: newPage - 1,
+        sortType: 0 //selectedSort
       });
       if (response.success) {
-        setComments([...comments, ...response.data]);
+        setComments([...response.data]);
         setPagesLoaded([...pagesLoaded, newPage - 1]);
 
         let tempPages = [...pages];
@@ -174,12 +179,16 @@ export default function Thread() {
   const handleShowCommentReply = index => e => {
     let tempComments = [...comments];
     let tempComment = { ...comments[index] };
-    tempComments.forEach(comment => {
-      if (comment.replying) comment.replying = false;
-      comment.replies.forEach(reply => {
-        if (reply.replying) reply.replying = false;
+    if (tempComments) {
+      tempComments.forEach(comment => {
+        if (comment.replying) comment.replying = false;
+        if (comment.replies) {
+          comment.replies.forEach(reply => {
+            if (reply.replying) reply.replying = false;
+          });
+        }
       });
-    });
+    }
     if (tempComment.replying) {
       tempComments[index].replying = false;
     } else {
@@ -190,12 +199,17 @@ export default function Thread() {
   const handleShowCommentReplyResponse = (commentIndex, replyIndex) => e => {
     let tempComments = [...comments];
     let tempComment = { ...comments[commentIndex].replies[replyIndex] };
-    tempComments.forEach(comment => {
-      if (comment.replying) comment.replying = false;
-      comment.replies.forEach(reply => {
-        if (reply.replying) reply.replying = false;
+
+    if (tempComments) {
+      tempComments.forEach(comment => {
+        if (comment.replying) comment.replying = false;
+        if (comment.replies) {
+          comment.replies.forEach(reply => {
+            if (reply.replying) reply.replying = false;
+          });
+        }
       });
-    });
+    }
     if (tempComment.replying) {
       tempComments[commentIndex].replies[replyIndex].replying = false;
     } else {
@@ -250,16 +264,17 @@ export default function Thread() {
     if (response.success) {
       response = await get("/Comment/Search", {
         threadId: threadId,
-        index: page
+        pageIndex: 0,
+        parentId: tempComments[index].commentId,
+        pageSize: 5
       });
       if (response.success) {
-        response.data[index].showReplies = true;
-
-        setComments([...response.data]);
-
-        let tempPages = [...pages];
-        tempPages[page] = response.data;
-        setPages(tempPages);
+        tempComments = [...tempComments];
+        tempComments[index].replies = response.data;
+        tempComments[index].showReplies = true;
+        tempComments[index].replyCount =
+          (tempComments[index].replyCount || 0) + 1;
+        setComments(tempComments);
       }
     }
   };
@@ -273,30 +288,35 @@ export default function Thread() {
   const handleSendReplyResponse = (commentIndex, replyIndex) => async e => {
     if (!comments[commentIndex].replies[replyIndex].reply) return;
     let tempComments = [...comments];
+    tempComments[commentIndex].replies[replyIndex].replyLoading = true;
+    setComments(tempComments);
     let response = await post("/Comment/Create", {
       threadId: threadId,
       namespaceId: namespaceId,
       parentCommentId: comments[commentIndex].commentId,
       body: comments[commentIndex].replies[replyIndex].reply
     });
+    tempComments = [...tempComments];
     tempComments[commentIndex].replies[replyIndex].reply = "";
     tempComments[commentIndex].replies[replyIndex].replying = false;
-    setComments(tempComments);
 
+    setComments(tempComments);
     setNewComment(response.data.commentId);
+
     if (response.success) {
       response = await get("/Comment/Search", {
         threadId: threadId,
-        index: page
+        pageIndex: 0,
+        parentId: tempComments[commentIndex].commentId,
+        pageSize: 5
       });
       if (response.success) {
-        response.data[commentIndex].showReplies = true;
-
-        setComments([...response.data]);
-
-        let tempPages = [...pages];
-        tempPages[page] = response.data;
-        setPages(tempPages);
+        tempComments = [...tempComments];
+        tempComments[commentIndex].replies = response.data;
+        tempComments[commentIndex].showReplies = true;
+        tempComments[commentIndex].replyCount =
+          (tempComments[commentIndex].replyCount || 0) + 1;
+        setComments(tempComments);
       }
     }
   };
@@ -316,10 +336,60 @@ export default function Thread() {
     //e.stopPropagation();
   };
 
-  const handleCollapseReplies = commentIndex => e => {
+  const handleCollapseReplies = commentIndex => async e => {
     let tempComments = [...comments];
     tempComments[commentIndex].showReplies = !tempComments[commentIndex]
       .showReplies;
+
+    if (!tempComments[commentIndex].replies) {
+      //make request for replies
+
+      tempComments[commentIndex].repliesLoading = true;
+      setComments(tempComments);
+
+      let response = await get("/Comment/Search", {
+        threadId: threadId,
+        pageIndex: tempComments[commentIndex].repliesPageIndex || 0,
+        parentId: comments[commentIndex].commentId,
+        pageSize: 5
+      });
+      tempComments = [...tempComments];
+      if (response.success) {
+        tempComments[commentIndex].replies = response.data;
+        if (tempComments[commentIndex].repliesPageIndex)
+          tempComments[commentIndex].repliesPageIndex++;
+        else tempComments[commentIndex].repliesPageIndex = 1;
+      }
+      tempComments[commentIndex].repliesLoading = false;
+    }
+
+    setComments(tempComments);
+  };
+
+  const handleLoadReplies = commentIndex => async e => {
+    let tempComments = [...comments];
+
+    tempComments[commentIndex].repliesLoading = true;
+    setComments(tempComments);
+
+    let response = await get("/Comment/Search", {
+      threadId: threadId,
+      pageIndex: tempComments[commentIndex].repliesPageIndex || 0,
+      parentId: comments[commentIndex].commentId,
+      pageSize: 5
+    });
+    tempComments = [...tempComments];
+    if (response.success) {
+      tempComments[commentIndex].replies = [
+        ...tempComments[commentIndex].replies,
+        ...response.data
+      ];
+      if (tempComments[commentIndex].repliesPageIndex)
+        tempComments[commentIndex].repliesPageIndex++;
+      else tempComments[commentIndex].repliesPageIndex = 1;
+    }
+    tempComments[commentIndex].repliesLoading = false;
+
     setComments(tempComments);
   };
 
@@ -330,7 +400,8 @@ export default function Thread() {
       setLoading(true);
       let response = await get("/Comment/Search", {
         threadId: threadId,
-        index: activePage - 1
+        pageIndex: activePage - 1,
+        sortType: selectedSort
       });
       setLoading(false);
 
@@ -388,6 +459,47 @@ export default function Thread() {
     );
   };
 
+  const responseGoogle = async response => {
+    let authResponse = await post("/Auth/GoogleLogin", { code: response.code });
+    if (authResponse.success) {
+      login(authResponse.data.token);
+    }
+  };
+
+  const responseFacebook = async response => {
+    let authResponse = await post("/Auth/FacebookLogin", {
+      accessToken: response.accessToken,
+      userId: response.userID
+    });
+    if (authResponse.success) {
+      login(authResponse.data.token);
+    }
+  };
+
+  const handleSortSelect = id => async e => {
+    if (id === selectedSort) return;
+
+    setSelectedSort(id);
+    const activePage = 1;
+    setPage(activePage - 1);
+    setLoading(true);
+    let response = await get("/Comment/Search", {
+      threadId: threadId,
+      pageIndex: activePage - 1,
+      sortType: id
+    });
+    setLoading(false);
+
+    if (response.success) {
+      setComments([...response.data]);
+      setPagesLoaded([activePage - 1]);
+
+      let tempPages = [...pages];
+      tempPages[activePage - 1] = response.data;
+      setPages(tempPages);
+    }
+  };
+
   return (
     <div id="jthread-container" onClick={handleClickAway} ref={containerRef}>
       <Comment.Group style={{ maxWidth: "100%" }} size="large">
@@ -428,7 +540,14 @@ export default function Thread() {
               }
             >
               <Dropdown.Menu>
-                <Dropdown.Item text="Profile" icon="user" />
+                <Dropdown.Item
+                  text="Profile"
+                  icon="user"
+                  as="a"
+                  target="_blank"
+                  href={config.dashboard + "/profile"}
+                />
+                <Dropdown.Item text="Change Avatar" icon="picture" />
                 <Dropdown.Item
                   onClick={() => {
                     logout();
@@ -466,23 +585,48 @@ export default function Thread() {
                   }
                   onClick={handleOpenNormalSignIn}
                 />
-                <Dropdown.Item
-                  text={
-                    <span style={{ display: "flex", alignItems: "center" }}>
-                      <img
-                        style={{
-                          width: "1em",
-                          marginRight: 11,
-                          marginLeft: 2
-                        }}
-                        src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
-                      />{" "}
-                      Google
-                    </span>
-                  }
+                <GoogleLogin
+                  clientId="655937877935-23gvd7f7bhjn9ocu6kaa3ub237i6c080.apps.googleusercontent.com"
+                  render={renderProps => (
+                    <Dropdown.Item
+                      onClick={renderProps.onClick}
+                      disabled={renderProps.disabled}
+                      text={
+                        <span style={{ display: "flex", alignItems: "center" }}>
+                          <img
+                            style={{
+                              width: "1em",
+                              marginRight: 11,
+                              marginLeft: 2
+                            }}
+                            src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
+                          />{" "}
+                          Google
+                        </span>
+                      }
+                    />
+                  )}
+                  buttonText="Login"
+                  onSuccess={responseGoogle}
+                  onFailure={responseGoogle}
+                  cookiePolicy={"single_host_origin"}
+                  responseType="code"
                 />
-                <Dropdown.Item text="Facebook" icon="facebook blue" />
-                <Dropdown.Item text="Twitter" icon="twitter blue" />
+
+                <FacebookLogin
+                  version={"6.0"}
+                  appId="200437064400153"
+                  callback={responseFacebook}
+                  render={renderProps => (
+                    <Dropdown.Item
+                      text="Facebook"
+                      icon="facebook blue"
+                      onClick={renderProps.onClick}
+                    />
+                  )}
+                />
+
+                <Dropdown.Item text="Twitter" icon="twitter blue" disabled />
               </Dropdown.Menu>
             </Dropdown>
           )}
@@ -550,9 +694,21 @@ export default function Thread() {
                 }
               >
                 <Dropdown.Menu>
-                  <Dropdown.Item text="Newest" />
-                  <Dropdown.Item text="Highest rating" />
-                  <Dropdown.Item text="Replies" />
+                  <Dropdown.Item
+                    text="Most Recent"
+                    selected={selectedSort === 0}
+                    onClick={handleSortSelect(0)}
+                  />
+                  <Dropdown.Item
+                    text="Highest rating"
+                    onClick={handleSortSelect(1)}
+                    selected={selectedSort === 1}
+                  />
+                  <Dropdown.Item
+                    onClick={handleSortSelect(2)}
+                    text="Most Replies"
+                    selected={selectedSort === 2}
+                  />
                 </Dropdown.Menu>
               </Dropdown>
             </List.Item>
@@ -590,7 +746,7 @@ export default function Thread() {
               style={{ height: 70, width: "100%" }}
             />
 
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <Button
                 content="Add Comment"
                 loading={commentLoading}
@@ -599,71 +755,94 @@ export default function Thread() {
                 primary
                 onClick={handleSendComment}
               />
-            ) : (
-              <Container textAlign="center" style={{ paddingTop: 16 }}>
-                <Header as="h4">
-                  Sign up{" "}
-                  <a href={config.landing + "?register=true"} target="_blank">
-                    here
-                  </a>{" "}
-                  to comment
-                </Header>
-                <Header as="h5" color="grey" style={{ marginTop: 0 }}>
-                  Or sign in with
-                </Header>
-                <div>
+            )}
+          </Form>
+        </div>
+        {!isAuthenticated && (
+          <Container textAlign="center" style={{ paddingTop: 16 }}>
+            <Header as="h4">
+              Sign up{" "}
+              <a href={config.landing + "?register=true"} target="_blank">
+                here
+              </a>{" "}
+              to comment
+            </Header>
+            <Header as="h5" color="grey" style={{ marginTop: 0 }}>
+              Or sign in with
+            </Header>
+            <div>
+              <FacebookLogin
+                version={"6.0"}
+                appId="200437064400153"
+                callback={responseFacebook}
+                render={renderProps => (
                   <Button
                     circular
                     color="facebook"
                     icon="facebook"
                     size="large"
+                    onClick={renderProps.onClick}
                   />
+                )}
+              />
+
+              <Button
+                circular
+                color="twitter"
+                icon="twitter"
+                size="large"
+                disabled
+              />
+
+              <Button
+                circular
+                icon="comments"
+                size="large"
+                color="black"
+                onClick={handleOpenNormalSignIn}
+              />
+              <GoogleLogin
+                clientId="655937877935-23gvd7f7bhjn9ocu6kaa3ub237i6c080.apps.googleusercontent.com"
+                render={renderProps => (
                   <Button
                     circular
-                    color="twitter"
-                    icon="twitter"
+                    icon
                     size="large"
-                  />
-                  <Button circular icon size="large">
+                    onClick={renderProps.onClick}
+                    disabled={renderProps.disabled}
+                  >
                     <img
                       style={{ width: "1.1em" }}
                       src="https://cdn.aircomechanical.com/wp-content/uploads/2018/12/google-review-button.png"
                     />
                   </Button>
-                  <Button
-                    circular
-                    icon="comments"
-                    size="large"
-                    color="black"
-                    onClick={handleOpenNormalSignIn}
-                  />
-                </div>
-              </Container>
-            )}
-          </Form>
-        </div>
+                )}
+                buttonText="Login"
+                onSuccess={responseGoogle}
+                onFailure={responseGoogle}
+                cookiePolicy={"single_host_origin"}
+                responseType="code"
+              />
+            </div>
+          </Container>
+        )}
 
         <div style={{ paddingTop: 16 }}>
           {loading ? (
             <Placeholder fluid style={{ marginTop: 16, marginBottom: 32 }}>
-              <Placeholder.Header image>
-                <Placeholder.Line />
-                <Placeholder.Line />
-              </Placeholder.Header>
-              <Placeholder.Paragraph>
-                <Placeholder.Line />
-                <Placeholder.Line />
-                <Placeholder.Line />
-              </Placeholder.Paragraph>
-              <Placeholder.Header image>
-                <Placeholder.Line />
-                <Placeholder.Line />
-              </Placeholder.Header>
-              <Placeholder.Paragraph>
-                <Placeholder.Line />
-                <Placeholder.Line />
-                <Placeholder.Line />
-              </Placeholder.Paragraph>
+              {new Array(10).fill(0).map((elem, index) => (
+                <>
+                  <Placeholder.Header image>
+                    <Placeholder.Line />
+                    <Placeholder.Line />
+                  </Placeholder.Header>
+                  <Placeholder.Paragraph>
+                    <Placeholder.Line />
+                    <Placeholder.Line />
+                    <Placeholder.Line />
+                  </Placeholder.Paragraph>
+                </>
+              ))}
             </Placeholder>
           ) : pages[page]?.length > 0 ? (
             <>
@@ -722,7 +901,7 @@ export default function Thread() {
                         />
                       </Comment.Action>
 
-                      {comment.replies.length > 0 && (
+                      {comment.replyCount > 0 && (
                         <>
                           <Comment.Action>|</Comment.Action>
                           <Comment.Action
@@ -733,10 +912,8 @@ export default function Thread() {
                                 comment.showReplies ? "caret up" : "caret down"
                               }
                             />
-                            {comment.replies.length +
-                              (comment.replies.length > 1
-                                ? " replies"
-                                : " reply")}
+                            {comment.replyCount +
+                              (comment.replyCount > 1 ? " replies" : " reply")}
                           </Comment.Action>
                         </>
                       )}
@@ -746,13 +923,17 @@ export default function Thread() {
                             <input
                               placeholder="Reply"
                               autoFocus
-                              disabled={comment.loading}
+                              disabled={comment.loading || !isAuthenticated}
                               value={comment.reply || ""}
                               onChange={handleCommentReplyChange(commentIndex)}
                             />
                           </Form.Field>
                           <Form.Field onClick={handleSendReply(commentIndex)}>
-                            <Button size="small" loading={comment.loading}>
+                            <Button
+                              size="small"
+                              loading={comment.loading}
+                              disabled={!isAuthenticated}
+                            >
                               Send
                             </Button>
                           </Form.Field>
@@ -760,9 +941,9 @@ export default function Thread() {
                       )}
                     </Comment.Actions>
                   </Comment.Content>
-                  {comment.showReplies && comment.replies?.length > 0 && (
+                  {comment.showReplies && (
                     <Comment.Group size="large">
-                      {comment.replies.map((reply, replyIndex) => (
+                      {comment.replies?.map((reply, replyIndex) => (
                         <Comment
                           key={reply.commentId}
                           style={{
@@ -803,7 +984,7 @@ export default function Thread() {
                                       autoFocus
                                       value={
                                         reply.reply ||
-                                        "@" + reply.user.displayName + " "
+                                        "@" + reply.user?.displayName + " "
                                       }
                                       onChange={handleCommentReplyResponseChange(
                                         commentIndex,
@@ -812,14 +993,17 @@ export default function Thread() {
                                     />
                                   </Form.Field>
                                   <Form.Field
-                                    control={Button}
-                                    size="small"
                                     onClick={handleSendReplyResponse(
                                       commentIndex,
                                       replyIndex
                                     )}
                                   >
-                                    Send
+                                    <Button
+                                      size="small"
+                                      loading={reply.replyLoading}
+                                    >
+                                      Send
+                                    </Button>
                                   </Form.Field>
                                 </Form>
                               )}
@@ -827,6 +1011,38 @@ export default function Thread() {
                           </Comment.Content>
                         </Comment>
                       ))}
+                      {comment.repliesLoading && (
+                        <Comment
+                          style={{
+                            marginTop: "1rem",
+                            marginBottom: "1rem"
+                          }}
+                        >
+                          <Placeholder>
+                            {new Array(
+                              comment.replyCount < 5 ? comment.replyCount : 5
+                            )
+                              .fill(0)
+                              .map((elem, index) => (
+                                <Placeholder.Header image key={"cr-" + index}>
+                                  <Placeholder.Line />
+                                  <Placeholder.Line />
+                                </Placeholder.Header>
+                              ))}
+                          </Placeholder>
+                        </Comment>
+                      )}
+                      {comment.replies?.length < comment.replyCount && (
+                        <Form.Field>
+                          <Button
+                            size="small"
+                            loading={comment.repliesLoading}
+                            onClick={handleLoadReplies(commentIndex)}
+                          >
+                            Load more
+                          </Button>
+                        </Form.Field>
+                      )}
                     </Comment.Group>
                   )}
                 </Comment>
