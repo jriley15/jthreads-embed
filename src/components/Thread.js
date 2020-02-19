@@ -18,7 +18,8 @@ import {
   Segment,
   Dropdown,
   Label,
-  Loader
+  Loader,
+  Modal
 } from "semantic-ui-react";
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
@@ -52,6 +53,7 @@ export default function Thread() {
   const [screenY, setScreenY] = useState(-1);
   const [screenX, setScreenX] = useState(-1);
   const [selectedSort, setSelectedSort] = useState(0);
+  const [changeAvatarOpen, setChangeAvatarOpen] = useState(false);
 
   const observer = React.useRef(
     new ResizeObserver(entries => {
@@ -547,7 +549,13 @@ export default function Thread() {
                   target="_blank"
                   href={config.dashboard + "/profile"}
                 />
-                <Dropdown.Item text="Change Avatar" icon="picture" />
+                <Dropdown.Item
+                  text="Change Avatar"
+                  icon="picture"
+                  onClick={() => {
+                    setChangeAvatarOpen(true);
+                  }}
+                />
                 <Dropdown.Item
                   onClick={() => {
                     logout();
@@ -1086,6 +1094,30 @@ export default function Thread() {
           </List.Item>
         </List>
       </Comment.Group>
+
+      <Modal
+        open={changeAvatarOpen}
+        onClose={() => {
+          setChangeAvatarOpen(false);
+        }}
+      >
+        <Modal.Header>Select a Photo</Modal.Header>
+        <Modal.Content image>
+          <Image
+            wrapped
+            size="medium"
+            src="https://react.semantic-ui.com/images/avatar/large/rachel.png"
+          />
+          <Modal.Description>
+            <Header>Default Profile Image</Header>
+            <p>
+              We've found the following gravatar image associated with your
+              e-mail address.
+            </p>
+            <p>Is it okay to use this photo?</p>
+          </Modal.Description>
+        </Modal.Content>
+      </Modal>
     </div>
   );
 }
