@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useLayoutEffect,
+  useCallback
+} from "react";
 import { useParams, useLocation } from "react-router-dom";
 import queryString from "query-string";
 import {
@@ -35,7 +41,7 @@ export default function Thread() {
   let { namespaceId, threadId: threadIdentifier, title } = queryString.parse(
     location.search
   );
-  const { post, get } = useApi();
+  const { post, get, postFormData } = useApi();
   const { claims, isAuthenticated, login, logout } = useAuth();
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
@@ -53,7 +59,8 @@ export default function Thread() {
   const [screenY, setScreenY] = useState(-1);
   const [screenX, setScreenX] = useState(-1);
   const [selectedSort, setSelectedSort] = useState(0);
-  const [changeAvatarOpen, setChangeAvatarOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [avatar, setAvatar] = useState("");
 
   const observer = React.useRef(
     new ResizeObserver(entries => {
@@ -86,16 +93,38 @@ export default function Thread() {
   };
 
   useEffect(() => {
-    window.addEventListener("message", ({ data, origin }) => {
-      if (origin === config.landing) {
-        if (data.token) login(data.token);
-      }
+    window.addEventListener("message", async ({ data, origin }) => {
+      if (origin === config.landing) if (data.token) login(data.token);
+
       if (typeof data.outerHeight !== "undefined")
         setOuterHeight(data.outerHeight);
       if (typeof data.outerWidth !== "undefined")
         setOuterWidth(data.outerWidth);
       if (typeof data.screenY !== "undefined") setScreenY(data.screenY);
       if (typeof data.screenX !== "undefined") setScreenX(data.screenX);
+
+      if (data.imageData) {
+        //make sure we're expecting an avatar change
+
+        let formData = new FormData();
+        formData.append("imageFile", data.imageData);
+        let response = await postFormData("/User/UploadAndSetAvatar", formData);
+        if (response.success) {
+          window.parent.postMessage({ success: true }, "*");
+          setAvatar(response.data);
+        }
+      } else if (data.imageUrl) {
+        //make sure we're expecting an avatar change
+
+        //hit api endpoint to update avatar url
+        let response = await post("/User/SetAvatar", {
+          imageUrl: data.imageUrl
+        });
+        if (response.success) {
+          setAvatar(data.imageUrl);
+          window.parent.postMessage({ success: true }, "*");
+        }
+      }
     });
     observer.current.observe(containerRef.current);
 
@@ -104,6 +133,38 @@ export default function Thread() {
       observer.current.unobserve();
     };
   }, []);
+
+  //super hacky shit for updating the users avatar in all existing comments
+  useEffect(() => {
+    if (avatar) {
+      setUser(user => {
+        let userCopy = { ...user, avatarUrl: avatar };
+        setPages(pages => {
+          let pagesCopy = [...pages];
+          pagesCopy.forEach(page => {
+            page.forEach(comment => {
+              if (
+                comment.user.id === userCopy.id &&
+                comment.user.avatarUrl !== userCopy.avatarUrl
+              )
+                comment.user.avatarUrl = userCopy.avatarUrl;
+            });
+          });
+          return pagesCopy;
+        });
+        return userCopy;
+      });
+    }
+  }, [avatar]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      let response = await get("/User/Me", {});
+      if (response.success) setUser(response.data);
+    };
+    if (isAuthenticated) getUser();
+    else setUser(null);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     init();
@@ -552,8 +613,14 @@ export default function Thread() {
                 <Dropdown.Item
                   text="Change Avatar"
                   icon="picture"
-                  onClick={() => {
-                    setChangeAvatarOpen(true);
+                  onClick={async () => {
+                    //setChangeAvatarOpen(true);
+                    if (user) {
+                      window.parent.postMessage(
+                        { showAvatarModal: true, user: user },
+                        "*"
+                      );
+                    }
                   }}
                 />
                 <Dropdown.Item
@@ -570,15 +637,10 @@ export default function Thread() {
               direction="left"
               style={{ margin: 0 }}
               text={
-                <Header as="h3" color="grey">
+                <Header as="h3" color="grey" style={{ display: "flex" }}>
+                  <Icon name="lock" style={{ marginRight: 6, fontSize: 18 }} />
                   Sign in
                 </Header>
-              }
-              icon={
-                <Icon
-                  name="lock"
-                  style={{ margin: 0, marginLeft: 6, marginTop: 2 }}
-                />
               }
               button
               labeled
@@ -742,7 +804,12 @@ export default function Thread() {
         </div>
         <div style={{ display: "flex", marginTop: 16 }}>
           <Comment>
-            <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
+            <Comment.Avatar
+              src={
+                user?.avatarUrl ||
+                "https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg"
+              }
+            />
           </Comment>
           <Form reply style={{ marginLeft: 16, width: "100%" }}>
             <Form.TextArea
@@ -868,7 +935,12 @@ export default function Thread() {
                     borderRadius: 10
                   }}
                 >
-                  <Comment.Avatar src="https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg" />
+                  <Comment.Avatar
+                    src={
+                      comment.user.avatarUrl ||
+                      "https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg"
+                    }
+                  />
                   <Comment.Content>
                     <Comment.Author as="a">
                       {comment.user?.displayName}
@@ -1094,30 +1166,6 @@ export default function Thread() {
           </List.Item>
         </List>
       </Comment.Group>
-
-      <Modal
-        open={changeAvatarOpen}
-        onClose={() => {
-          setChangeAvatarOpen(false);
-        }}
-      >
-        <Modal.Header>Select a Photo</Modal.Header>
-        <Modal.Content image>
-          <Image
-            wrapped
-            size="medium"
-            src="https://react.semantic-ui.com/images/avatar/large/rachel.png"
-          />
-          <Modal.Description>
-            <Header>Default Profile Image</Header>
-            <p>
-              We've found the following gravatar image associated with your
-              e-mail address.
-            </p>
-            <p>Is it okay to use this photo?</p>
-          </Modal.Description>
-        </Modal.Content>
-      </Modal>
     </div>
   );
 }

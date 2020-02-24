@@ -56,5 +56,27 @@ export default function useApi() {
     return response;
   };
 
-  return { get, post };
+  const postFormData = async (url, data) => {
+    let headers = { "Content-Type": "multipart/form-data" };
+
+    if (token) {
+      headers = { ...headers, Authorization: "Bearer " + token };
+    }
+    let response = {};
+
+    await Axios.post(api + url, data, {
+      headers: headers,
+      withCredentials: true
+    })
+      .then(res => {
+        response = res.data;
+      })
+      .catch(error => {
+        response = formatErrorResponse(error);
+      });
+
+    return response;
+  };
+
+  return { get, post, postFormData };
 }
