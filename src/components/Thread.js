@@ -568,6 +568,19 @@ export default function Thread() {
 
   return (
     <div id="jthread-container" onClick={handleClickAway} ref={containerRef}>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: [
+            `.ui.placeholder,
+            .ui.placeholder .image.header:after,
+            .ui.placeholder .line,
+            .ui.placeholder .line:after,
+            .ui.placeholder > :before {
+              background-color: ${backgroundColor};
+            }`
+          ].join("\n")
+        }}
+      ></style>
       <Comment.Group style={{ maxWidth: "100%" }} size="large">
         <div
           style={{
@@ -904,38 +917,6 @@ export default function Thread() {
             </div>
           </Container>
         )}
-
-        <style
-          dangerouslySetInnerHTML={{
-            __html: [
-              `.ui.placeholder,
-            .ui.placeholder .image.header:after,
-            .ui.placeholder .line,
-            .ui.placeholder .line:after,
-            .ui.placeholder > :before {
-              background-color: ${backgroundColor};
-            }`
-            ].join("\n")
-          }}
-        ></style>
-
-        <Placeholder
-          fluid
-          style={{
-            marginTop: 16,
-            marginBottom: 32
-          }}
-        >
-          <Placeholder.Header image>
-            <Placeholder.Line />
-            <Placeholder.Line />
-          </Placeholder.Header>
-          <Placeholder.Paragraph>
-            <Placeholder.Line />
-            <Placeholder.Line />
-            <Placeholder.Line />
-          </Placeholder.Paragraph>
-        </Placeholder>
 
         <div style={{ paddingTop: 16 }}>
           {loading ? (
