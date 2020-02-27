@@ -33,14 +33,17 @@ import config from "../util/config";
 import CommentBody from "./CommentBody";
 import GoogleLogin from "react-google-login";
 import FacebookLogin from "react-facebook-login/dist/facebook-login-render-props";
+import "../assets/index.css";
 
 const commentsPerPage = 10;
 
 export default function Thread() {
   const location = useLocation();
-  let { namespaceId, threadId: threadIdentifier, title } = queryString.parse(
-    location.search
-  );
+  let {
+    namespaceId,
+    threadId: threadIdentifier,
+    backgroundColor
+  } = queryString.parse(location.search);
   const { post, get, postFormData } = useApi();
   const { claims, isAuthenticated, login, logout } = useAuth();
   const [comments, setComments] = useState([]);
@@ -901,6 +904,38 @@ export default function Thread() {
             </div>
           </Container>
         )}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: [
+              `.ui.placeholder,
+            .ui.placeholder .image.header:after,
+            .ui.placeholder .line,
+            .ui.placeholder .line:after,
+            .ui.placeholder > :before {
+              background-color: ${backgroundColor};
+            }`
+            ].join("\n")
+          }}
+        ></style>
+
+        <Placeholder
+          fluid
+          style={{
+            marginTop: 16,
+            marginBottom: 32
+          }}
+        >
+          <Placeholder.Header image>
+            <Placeholder.Line />
+            <Placeholder.Line />
+          </Placeholder.Header>
+          <Placeholder.Paragraph>
+            <Placeholder.Line />
+            <Placeholder.Line />
+            <Placeholder.Line />
+          </Placeholder.Paragraph>
+        </Placeholder>
 
         <div style={{ paddingTop: 16 }}>
           {loading ? (
