@@ -576,7 +576,7 @@ export default function Thread() {
             .ui.placeholder .line,
             .ui.placeholder .line:after,
             .ui.placeholder > :before {
-              background-color: ${backgroundColor};
+              background-color: #${backgroundColor};
             }`
           ].join("\n")
         }}
