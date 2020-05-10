@@ -2,8 +2,6 @@ import React, {
   useEffect,
   useState,
   useRef,
-  useLayoutEffect,
-  useCallback
 } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import queryString from "query-string";
@@ -15,17 +13,11 @@ import {
   Icon,
   Placeholder,
   Divider,
-  CommentAvatar,
   Pagination,
   List,
-  Image,
   Container,
-  Dimmer,
-  Segment,
   Dropdown,
-  Label,
-  Loader,
-  Modal
+  Label
 } from "semantic-ui-react";
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
@@ -147,8 +139,8 @@ export default function Thread() {
           pagesCopy.forEach(page => {
             page.forEach(comment => {
               if (
-                comment.user.id === userCopy.id &&
-                comment.user.avatarUrl !== userCopy.avatarUrl
+                comment.user?.id === userCopy.id &&
+                comment.user?.avatarUrl !== userCopy.avatarUrl
               )
                 comment.user.avatarUrl = userCopy.avatarUrl;
             });
@@ -953,7 +945,7 @@ export default function Thread() {
                 >
                   <Comment.Avatar
                     src={
-                      comment.user.avatarUrl ||
+                      comment.user?.avatarUrl ||
                       "https://bestnycacupuncturist.com/wp-content/uploads/2016/11/anonymous-avatar-sm.jpg"
                     }
                   />
